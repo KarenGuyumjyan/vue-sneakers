@@ -1,5 +1,6 @@
-``<script setup>
-import { ref, onMounted, watch } from 'vue'
+<script setup>
+import { ref, onMounted, watch, reactive } from 'vue'
+import debounce from 'lodash.debounce'
 
 import Header from './components/Header.vue'
 import CardList from './components/CardList.vue'
@@ -8,39 +9,45 @@ import axios from 'axios'
 
 const openDrawer = ref(false)
 const items = ref([])
-const sortBy = ref('')
-const searchQuery = ref('')
+const filters = reactive({
+  sortBy: 'id',
+  searchQuery: ''
+})
 
 const handleOpenDrawer = () => {
   openDrawer.value = !openDrawer.value
 }
 
-const onChangeSelect = (event) => {
-  sortBy.value = event.target.value
+const fetchItems = async () => {
+  try {
+    const params = {
+      sortBy: filters.sortBy
+    }
+
+    if (filters.searchQuery) {
+      params.title = `*${filters.searchQuery}*`
+    }
+
+    const { data } = await axios.get('https://49fccd1bc666e8dd.mokky.dev/items', {
+      params: params
+    })
+
+    items.value = data
+  } catch (err) {
+    console.log(err)
+  }
 }
 
-const onSearch = (event) => {
-  searchQuery.value = event.target.value
-}
+onMounted(fetchItems)
 
-onMounted(async () => {
-  const { data } = await axios.get('https://49fccd1bc666e8dd.mokky.dev/items')
-  items.value = data
-})
+watch(
+  () => filters.searchQuery,
+  debounce(async () => {
+    fetchItems()
+  }, 700)
+)
 
-watch(sortBy, async () => {
-  const { data } = await axios.get(
-    'https://49fccd1bc666e8dd.mokky.dev/items?sortBy=' + sortBy.value
-  )
-  items.value = data
-})
-
-watch(searchQuery, async () => {
-  const { data } = await axios.get(
-    'https://49fccd1bc666e8dd.mokky.dev/items?title=*' + searchQuery.value + '*'
-  )
-  items.value = data
-})
+watch(() => filters.sortBy, fetchItems)
 </script>
 
 <template>
@@ -57,6 +64,7 @@ watch(searchQuery, async () => {
         <select
           class="text-gray-500 bg-transparent border border-slate-200 rounded-[10px] px-3 py-2 outline-none focus:border-gray-400"
           @change="onChangeSelect"
+          v-model="filters.sortBy"
         >
           <option value="id">Popular</option>
           <option value="title">Name</option>
@@ -68,7 +76,7 @@ watch(searchQuery, async () => {
           <input
             class="text-gray-500 w-full bg-transparent border border-slate-200 rounded-[10px] py-1.5 pl-9 pr-4 outline-none focus:border-gray-400"
             placeholder="Search..."
-            @change="onSearch"
+            v-model="filters.searchQuery"
           />
         </div>
       </div>

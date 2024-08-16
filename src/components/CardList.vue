@@ -5,8 +5,12 @@ defineProps({
   items: Array
 })
 
-const onClickFavorite = () => {
-  alert(111)
+const onClickFavorite = (singleItem, items) => {
+  items.forEach((item) => {
+    if (item.id === singleItem.id) {
+      item.isFavorite = !item.isFavorite
+    }
+  })
 }
 
 const onClickAdd = () => {
@@ -22,7 +26,7 @@ const onClickAdd = () => {
       v-for="item in items"
       :key="item.id"
       :isFavorite="item.isFavorite"
-      :onClickFavorite
+      :onClickFavorite="() => onClickFavorite(item, items)"
       :imageUrl="item.imageUrl"
       :title="item.title"
       :price="item.price"
