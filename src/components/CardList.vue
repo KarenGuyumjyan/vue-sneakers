@@ -5,12 +5,19 @@ defineProps({
   items: Array
 })
 
-const onClickFavorite = (singleItem, items) => {
-  items.forEach((item) => {
-    if (item.id === singleItem.id) {
-      item.isFavorite = !item.isFavorite
+const handleFavoriteItem = (item) => {
+  if (localStorage.favorites.includes(String(item.id))) {
+    const favorites = localStorage.favorites.split(',')
+    localStorage.favorites = favorites.filter((id) => id !== String(item.id))
+    item.isFavorite = false
+  } else {
+    if (localStorage.favorites) {
+      localStorage.favorites = localStorage.favorites + ',' + item.id
+    } else {
+      localStorage.favorites = item.id
     }
-  })
+    item.isFavorite = true
+  }
 }
 
 const onClickAdd = () => {
@@ -26,12 +33,12 @@ const onClickAdd = () => {
       v-for="item in items"
       :key="item.id"
       :isFavorite="item.isFavorite"
-      :onClickFavorite="() => onClickFavorite(item, items)"
+      :onClickFavorite="() => handleFavoriteItem(item)"
       :imageUrl="item.imageUrl"
       :title="item.title"
       :price="item.price"
       :isAdded="item.isAdded"
-      :onClickAdd
+      :onClickAdd="onClickAdd"
     />
   </div>
 </template>

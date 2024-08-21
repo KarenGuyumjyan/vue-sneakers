@@ -32,13 +32,27 @@ const fetchItems = async () => {
       params: params
     })
 
-    items.value = data
+    items.value = data.map((item) => {
+      if (localStorage.favorites.includes(String(item.id))) {
+        return {
+          ...item,
+          isFavorite: true
+        }
+      } else {
+        return item
+      }
+    })
   } catch (err) {
     console.log(err)
   }
 }
 
-onMounted(fetchItems)
+onMounted(() => {
+  fetchItems()
+  if (!localStorage.getItem('favorites')) {
+    localStorage.setItem('favorites', [])
+  }
+})
 
 watch(
   () => filters.searchQuery,
@@ -53,9 +67,9 @@ watch(() => filters.sortBy, fetchItems)
 <template>
   <div class="bg-zinc-50 2xs:w-5/6 xs:w-full rounded-xl shadow-xl m-auto 2xs:my-16 xs:my-0">
     <div v-if="openDrawer">
-      <DrawerCart :handleOpenDrawer />
+      <DrawerCart :handleOpenDrawer="handleOpenDrawer" />
     </div>
-    <Header :handleOpenDrawer />
+    <Header :handleOpenDrawer="handleOpenDrawer" />
     <div
       class="lg:p-10 md:p-8 p-6 flex flex-col-reverse sm:flex-row gap-5 justify-between items-center"
     >
